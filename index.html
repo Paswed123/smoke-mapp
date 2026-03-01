@@ -5,119 +5,129 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --main: #00c3ff; --bg: #0a0a0c; --card: #16161e; --text: #ffffff; }
-        body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
+        :root { --neon: #00c3ff; --bg: #0d0d12; --card: #1a1a24; --text: #f0f0f5; --sub: #7a7a8c; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; margin: 0; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; }
         
-        .step { display: none; width: 100%; flex-direction: column; align-items: center; }
-        .step.active { display: flex; animation: fadeIn 0.2s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        /* Прогресс-бар */
+        .progress-container { width: 100%; height: 4px; background: #222; border-radius: 2px; margin-bottom: 25px; display: flex; }
+        .progress-bar { height: 100%; background: var(--neon); border-radius: 2px; transition: width 0.4s ease; box-shadow: 0 0 10px var(--neon); }
 
-        h2 { color: var(--main); text-transform: uppercase; margin: 10px 0; font-size: 18px; text-align: center; }
-        .desc { color: #666; font-size: 12px; margin-bottom: 20px; text-align: center; }
+        .step { display: none; width: 100%; flex-direction: column; animation: slideIn 0.3s ease-out; }
+        .step.active { display: flex; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 
-        /* КАРТА ЗАЛА */
-        .map { position: relative; width: 300px; height: 300px; background: #111; border-radius: 20px; border: 1px solid #222; margin-bottom: 20px; }
-        .table { position: absolute; background: #1a1a20; border: 2px solid #333; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; transition: 0.2s; }
-        .table.selected { border-color: var(--main); color: var(--main); box-shadow: 0 0 15px var(--main); background: #1a262b; }
+        h2 { font-size: 22px; margin: 0 0 8px 0; color: var(--neon); text-transform: uppercase; letter-spacing: 1px; }
+        .hint { font-size: 14px; color: var(--sub); margin-bottom: 20px; }
 
-        /* ВЫБОР КРЕПОСТИ */
-        .strength-box { display: flex; gap: 8px; width: 100%; margin-bottom: 20px; }
-        .str-opt { flex: 1; padding: 12px; background: var(--card); border: 1px solid #333; border-radius: 10px; text-align: center; font-weight: bold; color: #777; }
-        .str-opt.selected { border-color: var(--main); color: var(--main); background: #1a262b; }
+        /* Карта столов */
+        .map-wrapper { position: relative; width: 100%; aspect-ratio: 1/1; background: #12121a; border: 1px solid #333; border-radius: 24px; margin-bottom: 20px; overflow: hidden; }
+        .table { position: absolute; background: #222; border: 2px solid #444; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; transition: 0.3s; color: var(--sub); }
+        .table.selected { border-color: var(--neon); color: var(--neon); background: #1a2a35; box-shadow: 0 0 20px rgba(0, 195, 255, 0.3); transform: scale(1.05); }
 
-        /* СЕТКА ТОВАРОВ */
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 100px; }
-        .item { background: var(--card); border: 1px solid #222; padding: 15px; border-radius: 15px; text-align: center; font-size: 14px; transition: 0.2s; }
-        .item.selected { border-color: var(--main); background: #1a262b; }
+        /* Плитка выбора (сетка) */
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 80px; }
+        .option-card { background: var(--card); border: 1px solid #333; padding: 18px; border-radius: 18px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .option-card.selected { border-color: var(--neon); background: #202b36; box-shadow: inset 0 0 10px rgba(0, 195, 255, 0.1); }
+        .option-card b { display: block; margin-bottom: 4px; font-size: 15px; }
+        .option-card span { font-size: 11px; color: var(--sub); }
 
-        /* НАВИГАЦИЯ */
-        .footer { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg); padding: 15px; box-sizing: border-box; display: flex; gap: 10px; border-top: 1px solid #222; }
-        .btn { flex: 1; padding: 16px; border-radius: 12px; font-weight: bold; border: none; font-size: 14px; text-transform: uppercase; cursor: pointer; }
-        .btn-next { background: var(--main); color: #000; }
-        .btn-back { background: #222; color: #888; }
+        /* Крепость */
+        .strength-row { display: flex; gap: 10px; margin-bottom: 20px; }
+        .str-item { flex: 1; padding: 15px; background: var(--card); border: 1px solid #333; border-radius: 12px; text-align: center; font-weight: 800; color: var(--sub); }
+        .str-item.selected { color: #000; background: var(--neon); border-color: var(--neon); }
+
+        /* Кнопки управления */
+        .footer-nav { position: fixed; bottom: 20px; left: 20px; right: 20px; display: flex; gap: 12px; }
+        .btn { flex: 1; padding: 18px; border-radius: 16px; font-weight: bold; border: none; text-transform: uppercase; letter-spacing: 1px; font-size: 14px; }
+        .primary { background: var(--neon); color: #000; }
+        .secondary { background: #222; color: #fff; }
         
-        input[type="time"] { background: var(--card); color: var(--main); border: 1px solid #333; padding: 10px; border-radius: 10px; font-size: 20px; text-align: center; margin-top: 10px; }
+        input[type="time"] { width: 100%; background: var(--card); border: 1px solid #333; color: var(--neon); padding: 15px; border-radius: 12px; font-size: 20px; text-align: center; outline: none; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
-    <div id="s1" class="step active">
-        <h2>Выберите столик</h2>
-        <div class="desc">Нажмите на стол на схеме</div>
-        <div class="map">
-            <div class="table selected" style="width:45px;height:45px;top:20px;left:20px;" onclick="sel('table','1',this)">№1</div>
-            <div class="table" style="width:45px;height:45px;top:20px;right:20px;" onclick="sel('table','2',this)">№2</div>
-            <div class="table" style="width:80px;height:50px;top:125px;left:110px;border-radius:25px;" onclick="sel('table','VIP',this)">VIP</div>
-            <div class="table" style="width:45px;height:45px;bottom:20px;left:20px;" onclick="sel('table','3',this)">№3</div>
-            <div class="table" style="width:45px;height:45px;bottom:20px;right:20px;" onclick="sel('table','4',this)">№4</div>
+    <div class="progress-container"><div class="progress-bar" id="pbar" style="width: 25%"></div></div>
+
+    <div id="step1" class="step active">
+        <h2>Где присядем?</h2>
+        <p class="hint">Выберите свободный стол на карте</p>
+        <div class="map-wrapper">
+            <div class="table selected" style="width:50px;height:50px;top:15%;left:15%" onclick="select('table','№1',this)">1</div>
+            <div class="table" style="width:50px;height:50px;top:15%;right:15%" onclick="select('table','№2',this)">2</div>
+            <div class="table" style="width:100px;height:60px;top:45%;left:33%;border-radius:30px" onclick="select('table','VIP',this)">VIP</div>
+            <div class="table" style="width:50px;height:50px;bottom:15%;left:15%" onclick="select('table','№3',this)">3</div>
+            <div class="table" style="width:50px;height:50px;bottom:15%;right:15%" onclick="select('table','№4',this)">4</div>
         </div>
-        <input type="time" id="time_pick" value="20:00">
-        <div class="footer"><button class="btn btn-next" onclick="go(2)">Далее</button></div>
+        <input type="time" id="time_val" value="20:00">
+        <div class="footer-nav"><button class="btn primary" onclick="next(2)">Далее</button></div>
     </div>
 
-    <div id="s2" class="step">
-        <h2>Кальян</h2>
-        <div class="desc">Крепость и вкус</div>
-        <div class="strength-box">
-            <div class="str-opt selected" onclick="sel('str','Легкий',this)">Легкий</div>
-            <div class="str-opt" onclick="sel('str','Средний',this)">Средний</div>
-            <div class="str-opt" onclick="sel('str','Крепкий',this)">Крепкий</div>
+    <div id="step2" class="step">
+        <h2>Забивка</h2>
+        <p class="hint">Укажите крепость и желаемый вкус</p>
+        <div class="strength-row">
+            <div class="str-item selected" onclick="select('str','Легкий',this)">SOFT</div>
+            <div class="str-item" onclick="select('str','Средний',this)">MEDIUM</div>
+            <div class="str-item" onclick="select('str','Крепкий',this)">HARD</div>
         </div>
-        <div class="grid">
-            <div class="item" onclick="sel('flavor','Pinkman',this)">Pinkman</div>
-            <div class="item" onclick="sel('flavor','Love 66',this)">Love 66</div>
-            <div class="item" onclick="sel('flavor','Bananan',this)">Банан-Клубника</div>
-            <div class="item" onclick="sel('flavor','Blueberry Ice',this)">Черника Лед</div>
+        <div class="options-grid">
+            <div class="option-card" onclick="select('flavor','Pinkman',this)"><b>Pinkman</b><span>Ягоды и цитрус</span></div>
+            <div class="option-card" onclick="select('flavor','Love 66',this)"><b>Love 66</b><span>Тропический микс</span></div>
+            <div class="option-card" onclick="select('flavor','Bananan',this)"><b>Bananan</b><span>Банан и клубника</span></div>
+            <div class="option-card" onclick="select('flavor','Ice Berry',this)"><b>Ice Berry</b><span>Ледяная черника</span></div>
         </div>
-        <div class="footer">
-            <button class="btn btn-back" onclick="go(1)">Назад</button>
-            <button class="btn btn-next" onclick="go(3)">Далее</button>
+        <div class="footer-nav">
+            <button class="btn secondary" onclick="next(1)">Назад</button>
+            <button class="btn primary" onclick="next(3)">Далее</button>
         </div>
     </div>
 
-    <div id="s3" class="step">
+    <div id="step3" class="step">
         <h2>Напитки и еда</h2>
-        <div class="desc">По желанию (можно пропустить)</div>
-        <div class="grid">
-            <div class="item" onclick="sel('drink','Кола',this)">Кола 0.5</div>
-            <div class="item" onclick="sel('drink','Чайник чая',this)">Чайник чая</div>
-            <div class="item" onclick="sel('snack','Чипсы',this)">Чипсы</div>
-            <div class="item" onclick="sel('snack','Орешки',this)">Орешки</div>
+        <p class="hint">Добавьте к заказу (по желанию)</p>
+        <div class="options-grid">
+            <div class="option-card" onclick="select('drink','Cola',this)"><b>Coca-Cola</b><span>Холодная 0.5л</span></div>
+            <div class="option-card" onclick="select('drink','Green Tea',this)"><b>Зеленый чай</b><span>Чайник 0.8л</span></div>
+            <div class="option-card" onclick="select('snack','Chips',this)"><b>Lays</b><span>Краб / Сыр</span></div>
+            <div class="option-card" onclick="select('snack','Nuts',this)"><b>Орешки</b><span>Соленый микс</span></div>
         </div>
-        <div class="footer">
-            <button class="btn btn-back" onclick="go(2)">Назад</button>
-            <button class="btn btn-next" onclick="finish()">Заказать</button>
+        <div class="footer-nav">
+            <button class="btn secondary" onclick="next(2)">Назад</button>
+            <button class="btn primary" onclick="send()">Заказать</button>
         </div>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        
-        let order = { table:'1', time:'20:00', str:'Легкий', flavor:'', drink:'-', snack:'-' };
+        tg.headerColor = '#0d0d12';
 
-        function sel(type, val, el) {
-            order[type] = val;
-            let items = el.parentElement.querySelectorAll('.item, .str-opt, .table');
-            items.forEach(i => i.classList.remove('selected'));
+        let data = { table:'№1', time:'20:00', str:'Легкий', flavor:'', drink:'—', snack:'—' };
+
+        function select(key, val, el) {
+            data[key] = val;
+            let group = el.parentElement.querySelectorAll('.table, .str-item, .option-card');
+            group.forEach(i => i.classList.remove('selected'));
             el.classList.add('selected');
             tg.HapticFeedback.impactOccurred('light');
         }
 
-        function go(step) {
-            if (step === 3 && order.flavor === '') {
-                tg.showAlert("Пожалуйста, выбери вкус кальяна!");
+        function next(s) {
+            if (s === 3 && !data.flavor) {
+                tg.showAlert("Выберите вкус табака!");
                 return;
             }
-            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-            document.getElementById('s' + step).classList.add('active');
+            document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
+            document.getElementById('step' + s).classList.add('active');
+            document.getElementById('pbar').style.width = (s * 33.3) + '%';
             window.scrollTo(0,0);
         }
 
-        function finish() {
-            order.time = document.getElementById('time_pick').value;
-            let data = `${order.table}|${order.time}|${order.str}|${order.flavor}|${order.drink}|${order.snack}`;
-            tg.sendData(data);
+        function send() {
+            data.time = document.getElementById('time_val').value;
+            let result = `${data.table}|${data.time}|${data.str}|${data.flavor}|${data.drink}|${data.snack}`;
+            tg.sendData(result);
         }
     </script>
 </body>
