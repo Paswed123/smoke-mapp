@@ -54,7 +54,8 @@
         <input type="time" id="time" value="20:00" style="margin-top:20px; background:#16161e; color:var(--main-color); border:1px solid #333; padding:10px; border-radius:10px; font-size:18px;">
         <div class="nav-buttons"><button class="btn btn-next" onclick="nextStep(2)">Далее</button></div>
     </div>
-<div id="step2" class="step">
+
+    <div id="step2" class="step">
         <h2>Крепость и Вкус</h2>
         <div class="subtitle">Что будем забивать?</div>
         <div class="strength-row">
@@ -124,9 +125,9 @@
         function finish() {
             order.time = document.getElementById('time').value;
             // Формат: Стол|Время|Крепость|Вкус|Напиток|Закуска
-            let result = ${order.table}|${order.time}|${order.str}|${order.flavor}|${order.drink}|${order.snack};
+            let result = `${order.table}|${order.time}|${order.str}|${order.flavor}|${order.drink}|${order.snack}`;
             tg.sendData(result);
         }
     </script>
 </body>
-</html>
+                </html>
