@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background: #0f0f12; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
+        img { width: 100%; border-radius: 15px; box-shadow: 0 0 20px rgba(0,195,255,0.3); }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+        button { background: #1a1a1f; border: 1px solid #00c3ff; color: white; padding: 15px; border-radius: 10px; font-size: 16px; }
+        button:active { background: #00c3ff; }
+    </style>
+</head>
+<body>
+    <h3>Выберите стол на карте</h3>
+    <img src="https://i.ibb.co/v4p4YjG/hookah-map.jpg" alt="Map"> <div class="grid">
+        <button onclick="selectStore(1)">Стол 1</button>
+        <button onclick="selectStore(2)">Стол 2</button>
+        <button onclick="selectStore(3)">Стол 3</button>
+        <button onclick="selectStore(4)">Стол 4</button>
+        <button onclick="selectStore(5)">Стол 5</button>
+        <button onclick="selectStore(6)">Стол 6</button>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        function selectStore(num) {
+            tg.sendData("table_" + num); // Отправляем номер стола боту
+            tg.close();
+        }
+    </script>
+</body>
+</html>
