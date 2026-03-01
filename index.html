@@ -1,41 +1,85 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { background: #0b0b0e; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 20px; }
-        .map-container { position: relative; display: inline-block; width: 100%; max-width: 500px; border-radius: 15px; border: 2px solid #00c3ff; padding: 10px; box-shadow: 0 0 20px rgba(0,195,255,0.2); }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
-        button { background: #1a1a1f; border: 1px solid #00c3ff; color: white; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        button:active { background: #00c3ff; color: black; }
-        h2 { color: #00c3ff; text-shadow: 0 0 10px rgba(0,195,255,0.5); }
+        body { background: #0f0f12; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        h2 { color: #00c3ff; margin-bottom: 5px; text-transform: uppercase; }
+        .time-picker { margin: 15px 0; background: #1a1a1f; padding: 10px; border-radius: 12px; border: 1px solid #333; width: 90%; }
+        input[type="time"] { background: none; border: none; color: white; font-size: 18px; width: 100%; outline: none; }
+        
+        /* КАРТА ЗАЛА */
+        .hall-map { 
+            position: relative; width: 320px; height: 380px; 
+            background: #16161a; border: 2px solid #333; border-radius: 20px; 
+            margin-top: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        .table {
+            position: absolute; background: #25252b; border: 2px solid #00c3ff;
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 12px; cursor: pointer; transition: 0.2s;
+        }
+        .table.selected { background: #00c3ff; color: #000; box-shadow: 0 0 15px #00c3ff; }
+        
+        /* Расстановка столов */
+        .t1 { width: 50px; height: 50px; top: 30px; left: 30px; }
+        .t2 { width: 50px; height: 50px; top: 30px; right: 30px; }
+        .t3 { width: 80px; height: 50px; top: 150px; left: 120px; border-radius: 25px; } /* Вип стол */
+        .t4 { width: 50px; height: 50px; bottom: 30px; left: 30px; }
+        .t5 { width: 50px; height: 50px; bottom: 30px; right: 30px; }
+        
+        .main-btn {
+            margin-top: 25px; width: 90%; background: #00c3ff; border: none;
+            padding: 15px; border-radius: 12px; font-weight: bold; font-size: 16px;
+            color: #000; cursor: pointer;
+        }
     </style>
 </head>
 <body>
+
     <h2>SMOKE RESERVE</h2>
-    <p>Выберите свободный столик:</p>
-    <div class="map-container">
-        <div class="grid">
-            <button onclick="sendData('table_1')">СТОЛ 1</button>
-            <button onclick="sendData('table_2')">СТОЛ 2</button>
-            <button onclick="sendData('table_3')">СТОЛ 3</button>
-            <button onclick="sendData('table_4')">СТОЛ 4</button>
-            <button onclick="sendData('table_5')">СТОЛ 5</button>
-            <button onclick="sendData('table_6')">СТОЛ 6</button>
-        </div>
+    <p style="font-size: 14px; color: #888;">Выберите время и столик</p>
+
+    <div class="time-picker">
+        <label style="display:block; font-size: 10px; color: #00c3ff;">ВРЕМЯ ВИЗИТА</label>
+        <input type="time" id="visit_time" value="20:00">
     </div>
+
+    <div class="hall-map" id="map">
+        <div class="table t1" onclick="selectItem(this, '1')">№1</div>
+        <div class="table t2" onclick="selectItem(this, '2')">№2</div>
+        <div class="table t3" onclick="selectItem(this, 'VIP')">VIP</div>
+        <div class="table t4" onclick="selectItem(this, '3')">№3</div>
+        <div class="table t5" onclick="selectItem(this, '4')">№4</div>
+    </div>
+
+    <button class="main-btn" onclick="sendToBot()">ЗАБРОНИРОВАТЬ</button>
 
     <script>
         let tg = window.Telegram.WebApp;
-        tg.expand(); // Разворачиваем окно
+        tg.expand();
+        let selectedTable = null;
 
-        function sendData(tableId) {
-            tg.sendData(tableId); // Отправляем данные боту
-            tg.close(); // Закрываем Mini App
+        function selectItem(el, id) {
+            // Снимаем выделение со всех
+            document.querySelectorAll('.table').forEach(t => t.classList.remove('selected'));
+            // Выделяем текущий
+            el.classList.add('selected');
+            selectedTable = id;
+            tg.HapticFeedback.impactOccurred('medium'); // Виброотклик
+        }
+
+        function sendToBot() {
+            let time = document.getElementById('visit_time').value;
+            if (!selectedTable) {
+                alert("Пожалуйста, выберите столик на карте!");
+                return;
+            }
+            // Отправляем данные строкой: "номер_время"
+            tg.sendData(selectedTable + "_" + time);
         }
     </script>
 </body>
 </html>
-
