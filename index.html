@@ -5,128 +5,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --neon: #00c3ff; --bg: #0d0d12; --card: #1a1a24; --text: #f0f0f5; --sub: #7a7a8c; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; margin: 0; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; }
+        :root { --accent: #00c3ff; --bg: #0a0a0c; --card: #16161e; --text: #ffffff; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; padding: 20px; overflow-x: hidden; }
         
-        /* Прогресс-бар */
-        .progress-container { width: 100%; height: 4px; background: #222; border-radius: 2px; margin-bottom: 25px; display: flex; }
-        .progress-bar { height: 100%; background: var(--neon); border-radius: 2px; transition: width 0.4s ease; box-shadow: 0 0 10px var(--neon); }
+        .step { display: none; width: 100%; flex-direction: column; }
+        .step.active { display: flex; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
-        .step { display: none; width: 100%; flex-direction: column; animation: slideIn 0.3s ease-out; }
-        .step.active { display: flex; }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        h2 { color: var(--accent); text-transform: uppercase; font-size: 20px; margin: 0 0 10px 0; text-align: center; }
+        .desc { color: #666; font-size: 13px; text-align: center; margin-bottom: 20px; }
 
-        h2 { font-size: 22px; margin: 0 0 8px 0; color: var(--neon); text-transform: uppercase; letter-spacing: 1px; }
-        .hint { font-size: 14px; color: var(--sub); margin-bottom: 20px; }
+        /* СЕТКА ВЫБОРА */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 30px; }
+        .card { background: var(--card); border: 1px solid #222; padding: 15px; border-radius: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .card.selected { border-color: var(--accent); background: #1a262b; box-shadow: 0 0 15px rgba(0,195,255,0.2); }
+        .card b { display: block; font-size: 15px; margin-bottom: 5px; }
+        .card span { font-size: 11px; color: #777; }
 
-        /* Карта столов */
-        .map-wrapper { position: relative; width: 100%; aspect-ratio: 1/1; background: #12121a; border: 1px solid #333; border-radius: 24px; margin-bottom: 20px; overflow: hidden; }
-        .table { position: absolute; background: #222; border: 2px solid #444; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; transition: 0.3s; color: var(--sub); }
-        .table.selected { border-color: var(--neon); color: var(--neon); background: #1a2a35; box-shadow: 0 0 20px rgba(0, 195, 255, 0.3); transform: scale(1.05); }
+        /* КРЕПОСТЬ */
+        .str-row { display: flex; gap: 10px; width: 100%; margin-bottom: 20px; }
+        .str-btn { flex: 1; padding: 15px; background: var(--card); border: 1px solid #333; border-radius: 12px; text-align: center; font-weight: bold; color: #555; }
+        .str-btn.selected { border-color: var(--accent); color: var(--accent); background: #1a262b; }
 
-        /* Плитка выбора (сетка) */
-        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 80px; }
-        .option-card { background: var(--card); border: 1px solid #333; padding: 18px; border-radius: 18px; text-align: center; cursor: pointer; transition: 0.2s; }
-        .option-card.selected { border-color: var(--neon); background: #202b36; box-shadow: inset 0 0 10px rgba(0, 195, 255, 0.1); }
-        .option-card b { display: block; margin-bottom: 4px; font-size: 15px; }
-        .option-card span { font-size: 11px; color: var(--sub); }
+        /* КАРТА */
+        .map { position: relative; width: 280px; height: 280px; background: #111; border-radius: 20px; border: 1px solid #222; margin: 0 auto 20px; }
+        .table { position: absolute; background: #1a1a20; border: 2px solid #333; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .table.selected { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 15px var(--accent); }
 
-        /* Крепость */
-        .strength-row { display: flex; gap: 10px; margin-bottom: 20px; }
-        .str-item { flex: 1; padding: 15px; background: var(--card); border: 1px solid #333; border-radius: 12px; text-align: center; font-weight: 800; color: var(--sub); }
-        .str-item.selected { color: #000; background: var(--neon); border-color: var(--neon); }
-
-        /* Кнопки управления */
-        .footer-nav { position: fixed; bottom: 20px; left: 20px; right: 20px; display: flex; gap: 12px; }
-        .btn { flex: 1; padding: 18px; border-radius: 16px; font-weight: bold; border: none; text-transform: uppercase; letter-spacing: 1px; font-size: 14px; }
-        .primary { background: var(--neon); color: #000; }
-        .secondary { background: #222; color: #fff; }
+        /* КНОПКИ */
+        .nav { position: fixed; bottom: 20px; left: 20px; right: 20px; display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 18px; border-radius: 15px; border: none; font-weight: bold; text-transform: uppercase; font-size: 14px; }
+        .btn-next { background: var(--accent); color: #000; }
+        .btn-back { background: #222; color: #777; }
         
-        input[type="time"] { width: 100%; background: var(--card); border: 1px solid #333; color: var(--neon); padding: 15px; border-radius: 12px; font-size: 20px; text-align: center; outline: none; margin-bottom: 20px; }
+        input[type="time"] { background: var(--card); color: var(--accent); border: 1px solid #333; padding: 12px; border-radius: 10px; font-size: 22px; width: 100%; text-align: center; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="progress-container"><div class="progress-bar" id="pbar" style="width: 25%"></div></div>
-
     <div id="step1" class="step active">
-        <h2>Где присядем?</h2>
-        <p class="hint">Выберите свободный стол на карте</p>
-        <div class="map-wrapper">
-            <div class="table selected" style="width:50px;height:50px;top:15%;left:15%" onclick="select('table','№1',this)">1</div>
-            <div class="table" style="width:50px;height:50px;top:15%;right:15%" onclick="select('table','№2',this)">2</div>
-            <div class="table" style="width:100px;height:60px;top:45%;left:33%;border-radius:30px" onclick="select('table','VIP',this)">VIP</div>
-            <div class="table" style="width:50px;height:50px;bottom:15%;left:15%" onclick="select('table','№3',this)">3</div>
-            <div class="table" style="width:50px;height:50px;bottom:15%;right:15%" onclick="select('table','№4',this)">4</div>
+        <h2>Выберите стол</h2>
+        <div class="desc">Нажмите на стол на схеме зала</div>
+        <div class="map">
+            <div class="table selected" style="width:50px;height:50px;top:20px;left:20px;" onclick="sel('table','№1',this)">1</div>
+            <div class="table" style="width:50px;height:50px;top:20px;right:20px;" onclick="sel('table','№2',this)">2</div>
+            <div class="table" style="width:90px;height:60px;top:110px;left:95px;border-radius:30px;" onclick="sel('table','VIP',this)">VIP</div>
+            <div class="table" style="width:50px;height:50px;bottom:20px;left:20px;" onclick="sel('table','№3',this)">3</div>
+            <div class="table" style="width:50px;height:50px;bottom:20px;right:20px;" onclick="sel('table','№4',this)">4</div>
         </div>
         <input type="time" id="time_val" value="20:00">
-        <div class="footer-nav"><button class="btn primary" onclick="next(2)">Далее</button></div>
+        <div class="nav"><button class="btn btn-next" onclick="go(2)">Далее</button></div>
     </div>
 
     <div id="step2" class="step">
-        <h2>Забивка</h2>
-        <p class="hint">Укажите крепость и желаемый вкус</p>
-        <div class="strength-row">
-            <div class="str-item selected" onclick="select('str','Легкий',this)">SOFT</div>
-            <div class="str-item" onclick="select('str','Средний',this)">MEDIUM</div>
-            <div class="str-item" onclick="select('str','Крепкий',this)">HARD</div>
+        <h2>Кальян</h2>
+        <div class="desc">Выберите желаемую крепость и микс</div>
+        <div class="str-row">
+            <div class="str-btn selected" onclick="sel('str','Легкий',this)">SOFT</div>
+            <div class="str-btn" onclick="sel('str','Средний',this)">MEDIUM</div>
+            <div class="str-btn" onclick="sel('str','Крепкий',this)">HARD</div>
         </div>
-        <div class="options-grid">
-            <div class="option-card" onclick="select('flavor','Pinkman',this)"><b>Pinkman</b><span>Ягоды и цитрус</span></div>
-            <div class="option-card" onclick="select('flavor','Love 66',this)"><b>Love 66</b><span>Тропический микс</span></div>
-            <div class="option-card" onclick="select('flavor','Bananan',this)"><b>Bananan</b><span>Банан и клубника</span></div>
-            <div class="option-card" onclick="select('flavor','Ice Berry',this)"><b>Ice Berry</b><span>Ледяная черника</span></div>
+        <div class="grid">
+            <div class="card" onclick="sel('flavor','Pinkman',this)"><b>Pinkman</b><span>Ягоды / Цитрус</span></div>
+            <div class="card" onclick="sel('flavor','Love 66',this)"><b>Love 66</b><span>Тропики / Мята</span></div>
+            <div class="card" onclick="sel('flavor','Bananan',this)"><b>Bananan</b><span>Банан / Клубника</span></div>
+            <div class="card" onclick="sel('flavor','Ice Berry',this)"><b>Ice Berry</b><span>Черника / Лед</span></div>
         </div>
-        <div class="footer-nav">
-            <button class="btn secondary" onclick="next(1)">Назад</button>
-            <button class="btn primary" onclick="next(3)">Далее</button>
+        <div class="nav">
+            <button class="btn btn-back" onclick="go(1)">Назад</button>
+            <button class="btn btn-next" onclick="go(3)">Далее</button>
         </div>
     </div>
 
     <div id="step3" class="step">
-        <h2>Напитки и еда</h2>
-        <p class="hint">Добавьте к заказу (по желанию)</p>
-        <div class="options-grid">
-            <div class="option-card" onclick="select('drink','Cola',this)"><b>Coca-Cola</b><span>Холодная 0.5л</span></div>
-            <div class="option-card" onclick="select('drink','Green Tea',this)"><b>Зеленый чай</b><span>Чайник 0.8л</span></div>
-            <div class="option-card" onclick="select('snack','Chips',this)"><b>Lays</b><span>Краб / Сыр</span></div>
-            <div class="option-card" onclick="select('snack','Nuts',this)"><b>Орешки</b><span>Соленый микс</span></div>
+        <h2>Дополнения</h2>
+        <div class="desc">Напитки и закуски (можно пропустить)</div>
+        <div class="grid">
+            <div class="card" onclick="sel('drink','Cola',this)"><b>Coca-Cola</b><span>0.5л</span></div>
+            <div class="card" onclick="sel('drink','Чай',this)"><b>Чайник чая</b><span>Зеленый / Черный</span></div>
+            <div class="card" onclick="sel('snack','Чипсы',this)"><b>Lays</b><span>Краб / Сыр</span></div>
+            <div class="card" onclick="sel('snack','Орешки',this)"><b>Микс орехов</b><span>Соленые</span></div>
         </div>
-        <div class="footer-nav">
-            <button class="btn secondary" onclick="next(2)">Назад</button>
-            <button class="btn primary" onclick="send()">Заказать</button>
+        <div class="nav">
+            <button class="btn btn-back" onclick="go(2)">Назад</button>
+            <button class="btn btn-next" onclick="send()">Забронировать</button>
         </div>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
-        tg.headerColor = '#0d0d12';
+        
+        let order = { table:'№1', time:'20:00', str:'Легкий', flavor:'', drink:'Нет', snack:'Нет' };
 
-        let data = { table:'№1', time:'20:00', str:'Легкий', flavor:'', drink:'—', snack:'—' };
-
-        function select(key, val, el) {
-            data[key] = val;
-            let group = el.parentElement.querySelectorAll('.table, .str-item, .option-card');
-            group.forEach(i => i.classList.remove('selected'));
+        function sel(key, val, el) {
+            order[key] = val;
+            let siblings = el.parentElement.querySelectorAll('.card, .str-btn, .table');
+            siblings.forEach(i => i.classList.remove('selected'));
             el.classList.add('selected');
             tg.HapticFeedback.impactOccurred('light');
         }
 
-        function next(s) {
-            if (s === 3 && !data.flavor) {
+        function go(s) {
+            if (s === 3 && order.flavor === '') {
                 tg.showAlert("Выберите вкус табака!");
                 return;
             }
             document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
             document.getElementById('step' + s).classList.add('active');
-            document.getElementById('pbar').style.width = (s * 33.3) + '%';
             window.scrollTo(0,0);
         }
 
         function send() {
-            data.time = document.getElementById('time_val').value;
-            let result = `${data.table}|${data.time}|${data.str}|${data.flavor}|${data.drink}|${data.snack}`;
+            order.time = document.getElementById('time_val').value;
+            let result = `${order.table}|${order.time}|${order.str}|${order.flavor}|${order.drink}|${order.snack}`;
             tg.sendData(result);
         }
     </script>
